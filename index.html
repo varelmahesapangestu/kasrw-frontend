@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Kas RW</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; }
+    h1 { color: #1a73e8; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; }
+    th { background: #1a73e8; color: white; }
+    tr:nth-child(even) { background: #f5f5f5; }
+    .pemasukan { color: green; font-weight: bold; }
+    .pengeluaran { color: red; font-weight: bold; }
+    form { margin-top: 30px; display: grid; gap: 10px; max-width: 400px; }
+    input, select { padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+    button { padding: 10px; background: #1a73e8; color: white; border: none; border-radius: 4px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>Aplikasi Pencatatan Kas RW</h1>
+  <h2>Tambah Transaksi</h2>
+  <form id="form-transaksi">
+    <input type="date" id="tanggal" required>
+    <input type="text" id="keterangan" placeholder="Keterangan" required>
+    <select id="jenis">
+      <option value="pemasukan">Pemasukan</option>
+      <option value="pengeluaran">Pengeluaran</option>
+    </select>
+    <input type="number" id="jumlah" placeholder="Jumlah (Rp)" required>
+    <button type="submit">Simpan</button>
+  </form>
+  <h2>Daftar Transaksi</h2>
+  <table>
+    <thead><tr><th>Tanggal</th><th>Keterangan</th><th>Jenis</th><th>Jumlah</th></tr></thead>
+    <tbody id="tabel-transaksi"></tbody>
+  </table>
+  <script>
+    const API = "http://192.168.56.10:8000";
+    function formatRupiah(n){ return "Rp " + Number(n).toLocaleString("id-ID"); }
+    async function loadTransaksi() {
+      const res = await fetch(API + "/transaksi");
+      const data = await res.json();
+      const tbody = document.getElementById("tabel-transaksi");
+      tbody.innerHTML = "";
+      data.forEach(function(t) {
+        tbody.innerHTML += `<tr><td>${t.tanggal}</td><td>${t.keterangan}</td>
+        <td class="${t.jenis}">${t.jenis}</td><td>${formatRupiah(t.jumlah)}</td></tr>`;
+      });
+    }
+    document.getElementById("form-transaksi").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const body = {
+        tanggal: document.getElementById("tanggal").value,
+        keterangan: document.getElementById("keterangan").value,
+        jenis: document.getElementById("jenis").value,
+        jumlah: parseFloat(document.getElementById("jumlah").value)
+      };
+      await fetch(API + "/transaksi", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      e.target.reset();
+      loadTransaksi();
+    });
+    loadTransaksi();
+  </script>
+</body>
+</html>
